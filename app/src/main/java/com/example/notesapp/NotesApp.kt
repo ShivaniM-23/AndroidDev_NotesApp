@@ -37,6 +37,16 @@ fun NotesScreen() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // 🔴 Title Error Message
+        if (titleError) {
+            Text(
+                text = "Title is empty",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+        }
+
         // Title Field
         OutlinedTextField(
             value = title,
@@ -49,6 +59,16 @@ fun NotesScreen() {
         )
 
         Spacer(modifier = Modifier.height(10.dp))
+
+        // 🔴 Description Error Message
+        if (descError) {
+            Text(
+                text = "Description is empty",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+        }
 
         // Description Field
         OutlinedTextField(
@@ -67,15 +87,10 @@ fun NotesScreen() {
             onClick = {
 
                 // Validation
-                if (title.isBlank()) {
-                    titleError = true
-                }
+                titleError = title.isBlank()
+                descError = description.isBlank()
 
-                if (description.isBlank()) {
-                    descError = true
-                }
-
-                if (title.isNotBlank() && description.isNotBlank()) {
+                if (!titleError && !descError) {
 
                     Toast.makeText(
                         context,
