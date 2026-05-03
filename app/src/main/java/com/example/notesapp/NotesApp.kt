@@ -10,6 +10,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+//added by me
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+
+
+data class Note(
+    val title: String,
+    val description: String
+)
 @Composable
 fun NotesScreen() {
 
@@ -21,33 +30,31 @@ fun NotesScreen() {
 
     val context = LocalContext.current
 
+    // ✅ List to store notes
+    val notesList = remember { mutableStateListOf<Note>() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(16.dp)
     ) {
 
         Text(
             text = "Notes App",
-            fontSize = 30.sp
+            fontSize = 30.sp,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔴 Title Error Message
+        // 🔴 Title Error
         if (titleError) {
             Text(
                 text = "Title is empty",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 14.sp
+                color = MaterialTheme.colorScheme.error
             )
-            Spacer(modifier = Modifier.height(5.dp))
         }
 
-        // Title Field
         OutlinedTextField(
             value = title,
             onValueChange = {
@@ -55,22 +62,20 @@ fun NotesScreen() {
                 titleError = false
             },
             label = { Text("Enter Title") },
-            isError = titleError
+            isError = titleError,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // 🔴 Description Error Message
+        // 🔴 Description Error
         if (descError) {
             Text(
                 text = "Description is empty",
-                color = MaterialTheme.colorScheme.error,
-                fontSize = 14.sp
+                color = MaterialTheme.colorScheme.error
             )
-            Spacer(modifier = Modifier.height(5.dp))
         }
 
-        // Description Field
         OutlinedTextField(
             value = description,
             onValueChange = {
@@ -78,33 +83,74 @@ fun NotesScreen() {
                 descError = false
             },
             label = { Text("Enter Description") },
-            isError = descError
+            isError = descError,
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
 
-                // Validation
                 titleError = title.isBlank()
                 descError = description.isBlank()
 
                 if (!titleError && !descError) {
 
+                    // ✅ Add note to list
+                    notesList.add(Note(title, description))
+
                     Toast.makeText(
                         context,
-                        "Title: $title\nDesc: $description",
+                        "Note Added",
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // Clear inputs
                     title = ""
                     description = ""
                 }
-            }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Add Note")
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ✅ Notes List UI
+        LazyColumn {
+            items(notesList) { note ->
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+
+                    onClick = {
+                        Toast.makeText(
+                            context,
+                            "Title: ${note.title}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                ) {
+
+                    Column(modifier = Modifier.padding(12.dp)) {
+
+                        Text(
+                            text = note.title,
+                            fontSize = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(5.dp))
+
+                        Text(
+                            text = note.description,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
         }
     }
 }
