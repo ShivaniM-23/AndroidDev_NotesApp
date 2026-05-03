@@ -13,7 +13,11 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun NotesScreen() {
 
-    var noteText by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
+    var titleError by remember { mutableStateOf(false) }
+    var descError by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -33,25 +37,56 @@ fun NotesScreen() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Title Field
         OutlinedTextField(
-            value = noteText,
+            value = title,
             onValueChange = {
-                noteText = it
+                title = it
+                titleError = false
             },
-            label = {
-                Text("Enter Note")
-            }
+            label = { Text("Enter Title") },
+            isError = titleError
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Description Field
+        OutlinedTextField(
+            value = description,
+            onValueChange = {
+                description = it
+                descError = false
+            },
+            label = { Text("Enter Description") },
+            isError = descError
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
-                Toast.makeText(
-                    context,
-                    noteText,
-                    Toast.LENGTH_SHORT
-                ).show()
+
+                // Validation
+                if (title.isBlank()) {
+                    titleError = true
+                }
+
+                if (description.isBlank()) {
+                    descError = true
+                }
+
+                if (title.isNotBlank() && description.isNotBlank()) {
+
+                    Toast.makeText(
+                        context,
+                        "Title: $title\nDesc: $description",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Clear inputs
+                    title = ""
+                    description = ""
+                }
             }
         ) {
             Text("Add Note")
