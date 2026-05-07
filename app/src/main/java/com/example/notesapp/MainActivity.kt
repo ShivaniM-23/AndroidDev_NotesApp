@@ -15,8 +15,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NotesAppTheme {
-                NotesScreen()
+//                NotesScreen()
 //                CounterScreen()
+                AppNavigation()
             }
         }
     }
