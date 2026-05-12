@@ -1,14 +1,21 @@
 package com.example.notesapp.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -19,6 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     navController: NavController,
@@ -27,29 +35,29 @@ fun NotesScreen(
     onDarkModeToggle: () -> Unit
 ) {
 
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var title by remember {
+        mutableStateOf("")
+    }
+
+    var description by remember {
+        mutableStateOf("")
+    }
 
     var titleError by remember {
         mutableStateOf(false)
     }
 
-    var descError by remember {
+    var descriptionError by remember {
         mutableStateOf(false)
-    }
-
-    var selectedTab by remember {
-        mutableStateOf(0)
     }
 
     var searchQuery by remember {
         mutableStateOf("")
     }
 
-    val tabs = listOf(
-        "All Notes",
-        "Favorites"
-    )
+    var selectedTab by remember {
+        mutableStateOf(0)
+    }
 
     val context = LocalContext.current
 
@@ -64,211 +72,343 @@ fun NotesScreen(
             filteredNotes
         } else {
             filteredNotes.filter {
-                it.isFavorite
+                it.isFavorite.value
             }
         }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
+        containerColor =
+            MaterialTheme.colorScheme.background,
 
-            horizontalArrangement =
-                Arrangement.SpaceBetween,
+        topBar = {
 
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
+            TopAppBar(
 
-            Text(
-                text = "Notes App",
-                fontSize = 30.sp
+                title = {
+
+                    Column {
+
+                        Text(
+                            text = "My Notes",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Capture your ideas",
+                            fontSize = 13.sp,
+                            color =
+                                MaterialTheme
+                                    .colorScheme
+                                    .primary
+                        )
+                    }
+                },
+
+                actions = {
+
+                    IconButton(
+                        onClick = {
+                            onDarkModeToggle()
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                if (darkMode)
+                                    Icons.Default.LightMode
+                                else
+                                    Icons.Default.DarkMode,
+
+                            contentDescription = "Theme"
+                        )
+                    }
+                }
             )
+        },
 
-            Button(
+        floatingActionButton = {
+
+            FloatingActionButton(
                 onClick = {
-                    onDarkModeToggle()
+
+                    titleError =
+                        title.isBlank()
+
+                    descriptionError =
+                        description.isBlank()
+
+                    if (!titleError &&
+                        !descriptionError
+                    ) {
+
+                        val currentTime =
+                            SimpleDateFormat(
+                                "dd MMM yyyy, hh:mm a",
+                                Locale.getDefault()
+                            ).format(Date())
+
+                        notesList.add(
+
+                            Note(
+                                id =
+                                    System.currentTimeMillis()
+                                        .toInt(),
+
+                                title = title,
+
+                                description =
+                                    description,
+
+                                createdAt =
+                                    currentTime
+                            )
+                        )
+
+                        title = ""
+                        description = ""
+
+                        Toast.makeText(
+                            context,
+                            "Note Added",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             ) {
 
-                Text(
-                    if (darkMode)
-                        "Light"
-                    else
-                        "Dark"
+                Icon(
+                    imageVector =
+                        Icons.Default.NoteAdd,
+
+                    contentDescription = "Add"
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+    ) { padding ->
 
-        SearchBar(
-            searchQuery = searchQuery,
-            onSearchChange = {
-                searchQuery = it
-            }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    MaterialTheme
+                        .colorScheme
+                        .background
+                )
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        if (titleError) {
-
-            Text(
-                text = "Title is empty",
-                color = MaterialTheme.colorScheme.error
+            SearchBar(
+                searchQuery = searchQuery,
+                onSearchChange = {
+                    searchQuery = it
+                }
             )
-        }
 
-        OutlinedTextField(
-            value = title,
+            Spacer(modifier = Modifier.height(18.dp))
 
-            onValueChange = {
+            Card(
 
-                title = it
-                titleError = false
-            },
+                shape = RoundedCornerShape(24.dp),
 
-            label = {
-                Text("Enter Title")
-            },
+                colors = CardDefaults.cardColors(
+                    containerColor =
+                        MaterialTheme
+                            .colorScheme
+                            .surfaceVariant
+                )
+            ) {
 
-            isError = titleError,
+                Column(
+                    modifier =
+                        Modifier.padding(18.dp)
+                ) {
 
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        if (descError) {
-
-            Text(
-                text = "Description is empty",
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        OutlinedTextField(
-            value = description,
-
-            onValueChange = {
-
-                description = it
-                descError = false
-            },
-
-            label = {
-                Text("Enter Description")
-            },
-
-            isError = descError,
-
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-
-                titleError = title.isBlank()
-                descError = description.isBlank()
-
-                if (!titleError && !descError) {
-
-                    val currentTime = SimpleDateFormat(
-                        "dd MMM yyyy, hh:mm a",
-                        Locale.getDefault()
-                    ).format(Date())
-
-                    notesList.add(
-
-                        Note(
-                            id = System.currentTimeMillis().toInt(),
-                            title = title,
-                            description = description,
-                            createdAt = currentTime
-                        )
+                    Text(
+                        text = "Create Note",
+                        fontSize = 20.sp,
+                        fontWeight =
+                            FontWeight.SemiBold
                     )
 
-                    Toast.makeText(
-                        context,
-                        "Note Added",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Spacer(
+                        modifier =
+                            Modifier.height(14.dp)
+                    )
 
-                    title = ""
-                    description = ""
+                    OutlinedTextField(
+                        value = title,
+
+                        onValueChange = {
+
+                            title = it
+                            titleError = false
+                        },
+
+                        label = {
+                            Text("Title")
+                        },
+
+                        isError = titleError,
+
+                        supportingText = {
+
+                            if (titleError) {
+
+                                Text(
+                                    text =
+                                        "Title cannot be empty",
+
+                                    color =
+                                        MaterialTheme
+                                            .colorScheme
+                                            .error
+                                )
+                            }
+                        },
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        shape =
+                            RoundedCornerShape(18.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = description,
+
+                        onValueChange = {
+
+                            description = it
+                            descriptionError = false
+                        },
+
+                        label = {
+                            Text("Description")
+                        },
+
+                        isError =
+                            descriptionError,
+
+                        supportingText = {
+
+                            if (descriptionError) {
+
+                                Text(
+                                    text =
+                                        "Description cannot be empty",
+
+                                    color =
+                                        MaterialTheme
+                                            .colorScheme
+                                            .error
+                                )
+                            }
+                        },
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        minLines = 3,
+
+                        shape =
+                            RoundedCornerShape(18.dp)
+                    )
                 }
-            },
+            }
 
-            modifier = Modifier.align(
-                Alignment.CenterHorizontally
-            )
-        ) {
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Text("Add Note")
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        TabRow(
-            selectedTabIndex = selectedTab
-        ) {
-
-            tabs.forEachIndexed { index, title ->
+            TabRow(
+                selectedTabIndex = selectedTab
+            ) {
 
                 Tab(
-                    selected = selectedTab == index,
+                    selected = selectedTab == 0,
 
                     onClick = {
-                        selectedTab = index
+                        selectedTab = 0
                     },
 
                     text = {
-                        Text(title)
+                        Text("All Notes")
+                    }
+                )
+
+                Tab(
+                    selected = selectedTab == 1,
+
+                    onClick = {
+                        selectedTab = 1
+                    },
+
+                    text = {
+                        Text("Favorites")
                     }
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        if (displayedNotes.isEmpty()) {
+            if (displayedNotes.isEmpty()) {
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
 
-                Text(
-                    text = "No Notes Found",
-                    fontSize = 20.sp
-                )
-            }
+                    contentAlignment =
+                        Alignment.Center
+                ) {
 
-        } else {
-
-            LazyColumn {
-
-                items(displayedNotes) { note ->
-
-                    NoteCard(
-                        note = note,
-                        navController = navController,
-
-                        onDelete = {
-                            notesList.remove(note)
-                        },
-
-                        onFavoriteToggle = {
-                            note.isFavorite =
-                                !note.isFavorite
-                        }
+                    Text(
+                        text = "No Notes Found",
+                        fontSize = 20.sp,
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .primary
                     )
+                }
+
+            } else {
+
+                LazyColumn(
+
+                    verticalArrangement =
+                        Arrangement.spacedBy(12.dp),
+
+                    contentPadding =
+                        PaddingValues(bottom = 100.dp)
+                ) {
+
+                    items(displayedNotes) { note ->
+
+                        NoteCard(
+                            note = note,
+
+                            navController =
+                                navController,
+
+                            onDelete = {
+                                notesList.remove(note)
+                            },
+
+                            onFavoriteToggle = {
+
+                                note.isFavorite.value =
+                                    !note.isFavorite.value
+                            }
+                        )
+                    }
                 }
             }
         }

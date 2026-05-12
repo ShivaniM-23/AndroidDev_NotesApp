@@ -1,18 +1,17 @@
 package com.example.notesapp.components
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -28,42 +27,43 @@ fun NoteCard(
     onFavoriteToggle: () -> Unit
 ) {
 
-    val context = LocalContext.current
-
     ElevatedCard(
 
+        shape = RoundedCornerShape(24.dp),
+
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp
+            defaultElevation = 6.dp
         ),
 
-        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor =
+                MaterialTheme.colorScheme.surface
+        ),
 
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .clickable {
+
+                val encodedTitle =
+                    URLEncoder.encode(
+                        note.title,
+                        StandardCharsets.UTF_8.toString()
+                    )
+
+                val encodedDescription =
+                    URLEncoder.encode(
+                        note.description,
+                        StandardCharsets.UTF_8.toString()
+                    )
+
+                navController.navigate(
+                    "detail/${note.id}/$encodedTitle/$encodedDescription"
+                )
+            }
     ) {
 
         Column(
-            modifier = Modifier
-                .padding(14.dp)
-                .clickable {
-
-                    val encodedTitle =
-                        URLEncoder.encode(
-                            note.title,
-                            StandardCharsets.UTF_8.toString()
-                        )
-
-                    val encodedDescription =
-                        URLEncoder.encode(
-                            note.description,
-                            StandardCharsets.UTF_8.toString()
-                        )
-
-                    navController.navigate(
-                        "detail/${note.id}/$encodedTitle/$encodedDescription"
-                    )
-                }
+            modifier = Modifier.padding(18.dp)
         ) {
 
             Row(
@@ -78,35 +78,24 @@ fun NoteCard(
 
                 Text(
                     text = note.title,
-                    fontSize = 22.sp
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Row {
 
                     IconButton(
                         onClick = {
-
                             onFavoriteToggle()
-
-                            Toast.makeText(
-                                context,
-
-                                if (note.isFavorite)
-                                    "Added to Favorites"
-                                else
-                                    "Removed from Favorites",
-
-                                Toast.LENGTH_SHORT
-                            ).show()
                         }
                     ) {
 
                         Icon(
                             imageVector =
-                                if (note.isFavorite)
-                                    Icons.Default.Star
+                                if (note.isFavorite.value)
+                                    Icons.Default.Favorite
                                 else
-                                    Icons.Default.StarBorder,
+                                    Icons.Outlined.FavoriteBorder,
 
                             contentDescription = "Favorite"
                         )
@@ -114,19 +103,14 @@ fun NoteCard(
 
                     IconButton(
                         onClick = {
-
                             onDelete()
-
-                            Toast.makeText(
-                                context,
-                                "Note Deleted",
-                                Toast.LENGTH_SHORT
-                            ).show()
                         }
                     ) {
 
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            imageVector =
+                                Icons.Default.Delete,
+
                             contentDescription = "Delete"
                         )
                     }
@@ -138,10 +122,10 @@ fun NoteCard(
             Text(
                 text = note.description,
                 fontSize = 15.sp,
-                maxLines = 2
+                lineHeight = 22.sp
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = note.createdAt,

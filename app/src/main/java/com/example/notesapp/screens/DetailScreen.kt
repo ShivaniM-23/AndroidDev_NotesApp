@@ -2,14 +2,14 @@ package com.example.notesapp.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -34,60 +34,69 @@ fun DetailScreen(
         mutableStateOf(description)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
+    Scaffold(
+        containerColor =
+            MaterialTheme.colorScheme.background
+    ) { padding ->
 
-        horizontalAlignment =
-            Alignment.CenterHorizontally
-    ) {
-
-        Text(
-            text = "Note Details",
-            fontSize = 28.sp
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value = updatedTitle,
-
-            onValueChange = {
-                updatedTitle = it
-            },
-
-            label = {
-                Text("Edit Title")
-            },
-
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = updatedDescription,
-
-            onValueChange = {
-                updatedDescription = it
-            },
-
-            label = {
-                Text("Edit Description")
-            },
-
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Row(
-            horizontalArrangement =
-                Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(20.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                )
         ) {
 
+            Text(
+                text = "Edit Note",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = updatedTitle,
+
+                onValueChange = {
+                    updatedTitle = it
+                },
+
+                label = {
+                    Text("Title")
+                },
+
+                modifier = Modifier.fillMaxWidth(),
+
+                shape = RoundedCornerShape(20.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = updatedDescription,
+
+                onValueChange = {
+                    updatedDescription = it
+                },
+
+                label = {
+                    Text("Description")
+                },
+
+                modifier = Modifier.fillMaxWidth(),
+
+                minLines = 6,
+
+                shape = RoundedCornerShape(20.dp)
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
             Button(
+
                 onClick = {
 
                     val note =
@@ -103,7 +112,8 @@ fun DetailScreen(
                         notesList[index] =
                             note.copy(
                                 title = updatedTitle,
-                                description = updatedDescription
+                                description =
+                                    updatedDescription
                             )
 
                         Toast.makeText(
@@ -114,13 +124,25 @@ fun DetailScreen(
                     }
 
                     navController.popBackStack()
-                }
+                },
+
+                modifier = Modifier.fillMaxWidth(),
+
+                shape = RoundedCornerShape(18.dp)
             ) {
 
-                Text("Update")
+                Text(
+                    text = "Update Note",
+
+                    modifier =
+                        Modifier.padding(vertical = 6.dp)
+                )
             }
 
-            Button(
+            Spacer(modifier = Modifier.height(14.dp))
+
+            OutlinedButton(
+
                 onClick = {
 
                     val noteToDelete =
@@ -140,22 +162,20 @@ fun DetailScreen(
                     }
 
                     navController.popBackStack()
-                }
+                },
+
+                modifier = Modifier.fillMaxWidth(),
+
+                shape = RoundedCornerShape(18.dp)
             ) {
 
-                Text("Delete")
+                Text(
+                    text = "Delete Note",
+
+                    modifier =
+                        Modifier.padding(vertical = 6.dp)
+                )
             }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(
-            onClick = {
-                navController.popBackStack()
-            }
-        ) {
-
-            Text("Back")
         }
     }
 }

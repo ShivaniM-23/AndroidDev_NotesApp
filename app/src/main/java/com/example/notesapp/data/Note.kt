@@ -1,5 +1,8 @@
 package com.example.notesapp.data
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+
 data class Note(
 
     val id: Int,
@@ -10,5 +13,6 @@ data class Note(
 
     val createdAt: String,
 
-    var isFavorite: Boolean = false
+    val isFavorite: MutableState<Boolean> =
+        mutableStateOf(false)
 )
