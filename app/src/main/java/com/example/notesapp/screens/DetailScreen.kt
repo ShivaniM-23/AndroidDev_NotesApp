@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.notesapp.data.Note
+import com.example.notesapp.viewmodel.NoteViewModel
 
 @Composable
 fun DetailScreen(
@@ -21,8 +22,10 @@ fun DetailScreen(
     title: String,
     description: String,
     navController: NavController,
-    notesList: MutableList<Note>
+    viewModel: NoteViewModel
 ) {
+
+    val notesList = viewModel.notes
 
     val context = LocalContext.current
 
@@ -106,15 +109,14 @@ fun DetailScreen(
 
                     if (note != null) {
 
-                        val index =
-                            notesList.indexOf(note)
+                        viewModel.updateNote(
 
-                        notesList[index] =
                             note.copy(
                                 title = updatedTitle,
                                 description =
                                     updatedDescription
                             )
+                        )
 
                         Toast.makeText(
                             context,
@@ -152,7 +154,9 @@ fun DetailScreen(
 
                     if (noteToDelete != null) {
 
-                        notesList.remove(noteToDelete)
+                        viewModel.deleteNote(
+                            noteToDelete
+                        )
 
                         Toast.makeText(
                             context,

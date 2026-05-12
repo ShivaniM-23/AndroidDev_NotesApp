@@ -1,13 +1,13 @@
 package com.example.notesapp.navigation
 
-import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.notesapp.data.Note
 import com.example.notesapp.screens.DetailScreen
 import com.example.notesapp.screens.NotesScreen
+import com.example.notesapp.viewmodel.NoteViewModel
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -17,8 +17,8 @@ fun AppNavigation(
     onThemeChange: () -> Unit
 ) {
 
-    val notesList = remember {
-        mutableStateListOf<Note>()
+    val viewModel = remember {
+        NoteViewModel()
     }
 
     val navController = rememberNavController()
@@ -32,7 +32,7 @@ fun AppNavigation(
 
             NotesScreen(
                 navController = navController,
-                notesList = notesList,
+                viewModel = viewModel,
                 darkMode = darkTheme,
                 onDarkModeToggle = onThemeChange
             )
@@ -70,7 +70,7 @@ fun AppNavigation(
                 title = title,
                 description = description,
                 navController = navController,
-                notesList = notesList
+                viewModel = viewModel
             )
         }
     }

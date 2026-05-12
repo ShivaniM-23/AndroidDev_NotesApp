@@ -21,19 +21,18 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.notesapp.components.NoteCard
 import com.example.notesapp.components.SearchBar
-import com.example.notesapp.data.Note
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.notesapp.viewmodel.NoteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     navController: NavController,
-    notesList: MutableList<Note>,
+    viewModel: NoteViewModel,
     darkMode: Boolean,
     onDarkModeToggle: () -> Unit
 ) {
+
+    val notesList = viewModel.notes
 
     var title by remember {
         mutableStateOf("")
@@ -143,27 +142,9 @@ fun NotesScreen(
                         !descriptionError
                     ) {
 
-                        val currentTime =
-                            SimpleDateFormat(
-                                "dd MMM yyyy, hh:mm a",
-                                Locale.getDefault()
-                            ).format(Date())
-
-                        notesList.add(
-
-                            Note(
-                                id =
-                                    System.currentTimeMillis()
-                                        .toInt(),
-
-                                title = title,
-
-                                description =
-                                    description,
-
-                                createdAt =
-                                    currentTime
-                            )
+                        viewModel.addNote(
+                            title,
+                            description
                         )
 
                         title = ""
@@ -399,7 +380,7 @@ fun NotesScreen(
                                 navController,
 
                             onDelete = {
-                                notesList.remove(note)
+                                viewModel.deleteNote(note)
                             },
 
                             onFavoriteToggle = {
