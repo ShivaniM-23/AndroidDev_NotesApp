@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,7 +25,8 @@ import java.nio.charset.StandardCharsets
 data class Note(
     val id: Int,
     val title: String,
-    val description: String
+    val description: String,
+    var isFavorite: Boolean = false
 )
 
 @Composable
@@ -33,44 +36,70 @@ fun AppNavigation() {
         mutableStateListOf<Note>()
     }
 
+    var darkMode by remember {
+        mutableStateOf(false)
+    }
+
     val navController = rememberNavController()
 
-    NavHost(
-        navController = navController,
-        startDestination = "notes"
+    MaterialTheme(
+        colorScheme =
+            if (darkMode) darkColorScheme()
+            else lightColorScheme()
     ) {
 
-        composable("notes") {
+        NavHost(
+            navController = navController,
+            startDestination = "notes"
+        ) {
 
-            NotesScreen(
-                navController = navController,
-                notesList = notesList
-            )
-        }
+            composable("notes") {
 
-        composable(
-            route = "detail/{id}/{title}/{description}"
-        ) { backStackEntry ->
+                NotesScreen(
+                    navController = navController,
+                    notesList = notesList,
+                    darkMode = darkMode,
+                    onDarkModeToggle = {
+                        darkMode = !darkMode
+                    }
+                )
+            }
 
-            val id =
-                backStackEntry.arguments?.getString("id")?.toInt() ?: 0
+            composable(
+                route = "detail/{id}/{title}/{description}"
+            ) { backStackEntry ->
 
-            val encodedTitle =
-                backStackEntry.arguments?.getString("title") ?: ""
+                val id =
+                    backStackEntry.arguments
+                        ?.getString("id")
+                        ?.toInt() ?: 0
 
-            val encodedDescription =
-                backStackEntry.arguments?.getString("description") ?: ""
+                val encodedTitle =
+                    backStackEntry.arguments
+                        ?.getString("title") ?: ""
 
-            val title = URLDecoder.decode(encodedTitle, "UTF-8")
-            val description = URLDecoder.decode(encodedDescription, "UTF-8")
+                val encodedDescription =
+                    backStackEntry.arguments
+                        ?.getString("description") ?: ""
 
-            DetailScreen(
-                id = id,
-                title = title,
-                description = description,
-                navController = navController,
-                notesList = notesList
-            )
+                val title = URLDecoder.decode(
+                    encodedTitle,
+                    "UTF-8"
+                )
+
+                val description = URLDecoder.decode(
+                    encodedDescription,
+                    "UTF-8"
+                )
+
+                DetailScreen(
+                    id = id,
+                    title = title,
+                    description = description,
+                    navController = navController,
+                    notesList = notesList
+                )
+            }
         }
     }
 }
@@ -78,7 +107,9 @@ fun AppNavigation() {
 @Composable
 fun NotesScreen(
     navController: NavController,
-    notesList: MutableList<Note>
+    notesList: MutableList<Note>,
+    darkMode: Boolean,
+    onDarkModeToggle: () -> Unit
 ) {
 
     var title by remember { mutableStateOf("") }
@@ -87,7 +118,23 @@ fun NotesScreen(
     var titleError by remember { mutableStateOf(false) }
     var descError by remember { mutableStateOf(false) }
 
+    var selectedTab by remember {
+        mutableStateOf(0)
+    }
+
+    val tabs = listOf(
+        "All Notes",
+        "Favorites"
+    )
+
     val context = LocalContext.current
+
+    val displayedNotes =
+        if (selectedTab == 0) {
+            notesList
+        } else {
+            notesList.filter { it.isFavorite }
+        }
 
     Column(
         modifier = Modifier
@@ -95,15 +142,36 @@ fun NotesScreen(
             .padding(16.dp)
     ) {
 
-        Text(
-            text = "Notes App",
-            fontSize = 30.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceBetween,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+
+            Text(
+                text = "Notes App",
+                fontSize = 30.sp
+            )
+
+            Button(
+                onClick = {
+                    onDarkModeToggle()
+                }
+            ) {
+
+                Text(
+                    if (darkMode)
+                        "Light"
+                    else
+                        "Dark"
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Title Error
         if (titleError) {
             Text(
                 text = "Title is empty",
@@ -113,18 +181,23 @@ fun NotesScreen(
 
         OutlinedTextField(
             value = title,
+
             onValueChange = {
                 title = it
                 titleError = false
             },
-            label = { Text("Enter Title") },
+
+            label = {
+                Text("Enter Title")
+            },
+
             isError = titleError,
+
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Description Error
         if (descError) {
             Text(
                 text = "Description is empty",
@@ -134,12 +207,18 @@ fun NotesScreen(
 
         OutlinedTextField(
             value = description,
+
             onValueChange = {
                 description = it
                 descError = false
             },
-            label = { Text("Enter Description") },
+
+            label = {
+                Text("Enter Description")
+            },
+
             isError = descError,
+
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -171,16 +250,42 @@ fun NotesScreen(
                     description = ""
                 }
             },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+
+            modifier = Modifier.align(
+                Alignment.CenterHorizontally
+            )
         ) {
+
             Text("Add Note")
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        TabRow(
+            selectedTabIndex = selectedTab
+        ) {
+
+            tabs.forEachIndexed { index, title ->
+
+                Tab(
+                    selected = selectedTab == index,
+
+                    onClick = {
+                        selectedTab = index
+                    },
+
+                    text = {
+                        Text(title)
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         LazyColumn {
 
-            items(notesList) { note ->
+            items(displayedNotes) { note ->
 
                 ElevatedCard(
                     modifier = Modifier
@@ -193,15 +298,17 @@ fun NotesScreen(
                             .padding(12.dp)
                             .clickable {
 
-                                val encodedTitle = URLEncoder.encode(
-                                    note.title,
-                                    StandardCharsets.UTF_8.toString()
-                                )
+                                val encodedTitle =
+                                    URLEncoder.encode(
+                                        note.title,
+                                        StandardCharsets.UTF_8.toString()
+                                    )
 
-                                val encodedDescription = URLEncoder.encode(
-                                    note.description,
-                                    StandardCharsets.UTF_8.toString()
-                                )
+                                val encodedDescription =
+                                    URLEncoder.encode(
+                                        note.description,
+                                        StandardCharsets.UTF_8.toString()
+                                    )
 
                                 navController.navigate(
                                     "detail/${note.id}/$encodedTitle/$encodedDescription"
@@ -210,9 +317,14 @@ fun NotesScreen(
                     ) {
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier.fillMaxWidth(),
+
+                            horizontalArrangement =
+                                Arrangement.SpaceBetween,
+
+                            verticalAlignment =
+                                Alignment.CenterVertically
                         ) {
 
                             Text(
@@ -220,27 +332,67 @@ fun NotesScreen(
                                 fontSize = 20.sp
                             )
 
-                            IconButton(
-                                onClick = {
+                            Row {
 
-                                    notesList.remove(note)
+                                IconButton(
+                                    onClick = {
 
-                                    Toast.makeText(
-                                        context,
-                                        "Note Deleted",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                        note.isFavorite =
+                                            !note.isFavorite
+
+                                        Toast.makeText(
+                                            context,
+
+                                            if (note.isFavorite)
+                                                "Added to Favorites"
+                                            else
+                                                "Removed from Favorites",
+
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                ) {
+
+                                    Icon(
+                                        imageVector =
+                                            if (note.isFavorite)
+                                                Icons.Default.Star
+                                            else
+                                                Icons.Default.StarBorder,
+
+                                        contentDescription =
+                                            "Favorite"
+                                    )
                                 }
-                            ) {
 
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete"
-                                )
+                                IconButton(
+                                    onClick = {
+
+                                        notesList.remove(note)
+
+                                        Toast.makeText(
+                                            context,
+                                            "Note Deleted",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                ) {
+
+                                    Icon(
+                                        imageVector =
+                                            Icons.Default.Delete,
+
+                                        contentDescription =
+                                            "Delete"
+                                    )
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(5.dp))
+                        Spacer(
+                            modifier =
+                                Modifier.height(5.dp)
+                        )
 
                         Text(
                             text = note.description,
@@ -270,7 +422,8 @@ fun DetailScreen(
             .fillMaxSize()
             .padding(20.dp),
 
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
 
         Text(
@@ -295,8 +448,11 @@ fun DetailScreen(
         Spacer(modifier = Modifier.height(40.dp))
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.spacedBy(20.dp),
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Button(
@@ -304,6 +460,7 @@ fun DetailScreen(
                     navController.popBackStack()
                 }
             ) {
+
                 Text("Back")
             }
 
@@ -311,7 +468,9 @@ fun DetailScreen(
                 onClick = {
 
                     val noteToDelete =
-                        notesList.find { it.id == id }
+                        notesList.find {
+                            it.id == id
+                        }
 
                     if (noteToDelete != null) {
 
@@ -327,6 +486,7 @@ fun DetailScreen(
                     navController.popBackStack()
                 }
             ) {
+
                 Text("Delete Note")
             }
         }
